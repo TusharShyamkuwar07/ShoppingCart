@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cart</title>
+    <style>
+      body h1 {
+        text-align: center;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid #d5b2b2;
+        text-align: center;
+        padding: 8px;
+        font-size: 20px;
+      }
+
+      th {
+        background-color: #ded2d2;
+      }
+
+      img {
+        width: 100px;
+        height: 100px;
+      }
+
+      input[type="number"] {
+        width: 30px;
+      }
+      #total-price {
+        /* border: 2px solid red; */
+        display: flex;
+        justify-content: end;
+        /* font-size: 20px; */
+        font-weight: bold;
+      }
+      .totalpricecontent {
+        /* border: 2px solid green; */
+        /* margin: 0px 50px;  */
+      }
+
+      .totalpricecontent h1 {
+        display: inline;
+        /* border: 2px solid black;  */
+        /* margin-right: 50px; */
+        font-size: 25px;
+      }
+      #finalprice {
+        display: inline-block;
+        /* border: 2px solid black; */
+        margin-left: 30px;
+        margin-right: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Cart Details</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Serial No</th>
+          <th>Product Image</th>
+          <th>Item Name</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Final Price</th>
+          <th>Delete Item</th>
+        </tr>
+      </thead>
+      <tbody id="cart-details"></tbody>
+    </table>
+    <div id="total-price">
+      <div class="totalpricecontent">
+        <h1>Total Price :</h1>
+        <h2 id="finalprice"></h2>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+        const cartDetails = document.getElementById("cart-details");
+        let totalPrice = 0;
+
+        cartItems.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td><strong style="font-size:20px";>${index + 1}</td>
+                    <td><img src="${item.image}" alt="${item.title}"></td>
+                    <td><strong>${item.title}</td>
+                    <td>$${item.price}</td>
+                    <td><input type="number" min="1" value="${
+                      item.quantity
+                    }" data-index="${index}" onchange="updateQuantity(this)"></td>
+                    <td id="final-price-${index}">$${(
+            item.price * item.quantity
+          ).toFixed(2)}</td>
+                    <td><button onclick="deleteItem(${index})" style="color:white;border-radius:10px;background-color:red;border:none;width:50%;padding:5px 0px;">DELETE</button></td>
+                `;
+          cartDetails.appendChild(row);
+
+          totalPrice += item.price * item.quantity;
+        });
+
+        document.getElementById(
+          "finalprice"
+        ).textContent = `$${totalPrice.toFixed(2)}`;
+      });
+
+      function updateQuantity(input) {
+        const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+        const index = input.dataset.index;
+        const newQuantity = parseInt(input.value);
+
+        if (newQuantity < 1) {
+          alert("Quantity must be at least 1.");
+          input.value = 1;
+          return;
+        }
+
+        const item = cartItems[index];
+        const finalPriceElement = document.getElementById(
+          `final-price-${index}`
+        );
+
+        item.quantity = newQuantity;
+        finalPriceElement.textContent = `$${(
+          item.price * item.quantity
+        ).toFixed(2)}`;
+
+        localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+        let totalPrice = 0;
+
+        cartItems.forEach((item) => {
+          totalPrice += item.price * item.quantity;
+        });
+
+        document.getElementById(
+          "finalprice"
+        ).textContent = `$${totalPrice.toFixed(2)}`;
+      }
+
+      function deleteItem(index) {
+        const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+        cartItems.splice(index, 1);
+        localStorage.setItem("cartItems", JSON.stringify(cartItems));
+
+        // Remove the corresponding row from the table
+        const rowToRemove = document.getElementById(
+          `final-price-${index}`
+        ).parentNode;
+        rowToRemove.parentNode.removeChild(rowToRemove);
+
+        // Recalculate and update total price
+        let totalPrice = 0;
+        cartItems.forEach((item) => {
+          totalPrice += item.price * item.quantity;
+        });
+        document.getElementById(
+          "finalprice"
+        ).textContent = `$${totalPrice.toFixed(2)}`;
+      }
+    </script>
+  </body>
+</html>
